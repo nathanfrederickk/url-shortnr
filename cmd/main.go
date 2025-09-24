@@ -4,7 +4,7 @@ import (
 	"log"
 	"go-shortener/internal/api"
 	"go-shortener/internal/database"
-	"[github.com/gofiber/fiber/v2](https://github.com/gofiber/fiber/v2)"
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
