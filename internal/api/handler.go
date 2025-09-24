@@ -32,7 +32,7 @@ func shortenURL(c *fiber.Ctx) error {
 	countersCollection := database.MongoClient.Database("url_shortener").Collection("counters")
 	filter := bson.M{"_id": "url_id"}
 	update := bson.M{"$inc": bson.M{"sequence_value": 1}}
-	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After).SetUpsert(true)
 
 	var updatedCounter struct {
 		SequenceValue int64 `bson:"sequence_value"`
