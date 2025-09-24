@@ -29,7 +29,6 @@ func shortenURL(c *fiber.Ctx) error {
 	}
 	longURL := request.URL
 
-	// Get next unique ID from the counters collection in MongoDB
 	countersCollection := database.MongoClient.Database("url_shortener").Collection("counters")
 	filter := bson.M{"_id": "url_id"}
 	update := bson.M{"$inc": bson.M{"sequence_value": 1}}
@@ -38,13 +37,25 @@ func shortenURL(c *fiber.Ctx) error {
 	var updatedCounter struct {
 		SequenceValue int64 `bson:"sequence_value"`
 	}
-	err := countersCollection.FindOneAndUpdate(database.Ctx, filter, update, opts).Decode(&updatedCounter)
+
+	// Split the command into two steps to find the exact error.
+	singleResult := countersCollection.FindOneAndUpdate(database.Ctx, filter, update, opts)
+	if err := singleResult.Err(); err != nil {
+		// This logs the specific error from the database operation itself.
+		log.Printf("Error from FindOneAndUpdate: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not update counter"})
+	}
+
+	err := singleResult.Decode(&updatedCounter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not generate new ID"})
+		// Logs the specific error from the decoding step.
+		log.Printf("Error decoding counter result: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not decode counter"})
 	}
 
 	// Convert the ID to a Base62 string using the 'shortener' package
 	shortCode := shortener.ToBase62(updatedCounter.SequenceValue)
+
 
 	// Create the URL record and save to MongoDB
 	urlRecord := shortener.URL{
