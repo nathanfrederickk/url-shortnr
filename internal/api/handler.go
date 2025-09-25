@@ -41,7 +41,8 @@ func shortenURL(c *fiber.Ctx) error {
 	// Split the command into two steps to find the exact error.
 	singleResult := countersCollection.FindOneAndUpdate(database.Ctx, filter, update, opts)
 	if err := singleResult.Err(); err != nil {
-		// This logs the specific error from the database operation itself.
+
+		// Logs the specific error from the database operation itself.
 		log.Printf("Error from FindOneAndUpdate: %v\n", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not update counter"})
 	}
